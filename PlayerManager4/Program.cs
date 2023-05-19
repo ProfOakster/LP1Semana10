@@ -43,9 +43,9 @@ namespace PlayerManager4
         /// </summary>
         private void Start()
         {
+
             // We keep the user's option here
             string option;
-
             // Main program loop
             do
             {
@@ -66,6 +66,9 @@ namespace PlayerManager4
                         ListPlayersWithScoreGreaterThan();
                         break;
                     case "4":
+                        ChangeSorting();
+                        break;
+                    case "5":
                         Console.WriteLine("Bye!");
                         break;
                     default:
@@ -79,7 +82,7 @@ namespace PlayerManager4
                 Console.WriteLine("\n");
 
                 // Loop keeps going until players choses to quit (option 4)
-            } while (option != "4");
+            } while (option != "5");
         }
 
         /// <summary>
@@ -87,11 +90,19 @@ namespace PlayerManager4
         /// </summary>
         private void ShowMenu()
         {
+            string sorting = Player.GetSort() switch
+            {
+                0 => "Score",
+                1 => "Name, ascending",
+                -1 => "Name, descending",
+                _ => "Error",
+            };
             Console.WriteLine("Select your option:");
             Console.WriteLine(" |1| - Insert new player;");
             Console.WriteLine(" |2| - See player list;");
             Console.WriteLine(" |3| - See players above a certain score;");
-            Console.WriteLine(" |4| - Quit.");
+            Console.WriteLine($" |4| - Change player sorting method (current:{sorting});");
+            Console.WriteLine(" |5| - Quit.");
         }
 
         /// <summary>
@@ -105,7 +116,8 @@ namespace PlayerManager4
             int newScore = int.Parse(Console.ReadLine());
 
             playerList.Add(new Player(newName, newScore));
-            playerList.Sort();
+
+            SortBy();
         }
 
         /// <summary>
@@ -135,7 +147,7 @@ namespace PlayerManager4
             Console.WriteLine("Insert baseline score:");
             int baseScore = int.Parse(Console.ReadLine());
 
-            goodPlayers=GetPlayersWithScoreGreaterThan(baseScore);
+            goodPlayers = GetPlayersWithScoreGreaterThan(baseScore);
             ListPlayers(goodPlayers);
         }
 
@@ -150,11 +162,60 @@ namespace PlayerManager4
         {
             foreach (Player p in playerList)
             {
-                if (p.Score>minScore)
+                if (p.Score > minScore)
                 {
                     yield return p;
-                }    
+                }
             }
+        }
+        private void ChangeSorting()
+        {
+            string selection;
+            Console.WriteLine("Select sorting method:");
+            Console.WriteLine(" |1| - By score (descending);");
+            Console.WriteLine(" |2| - By player name (ascending);");
+            Console.WriteLine(" |3| - By player name (descending).");
+
+            selection = Console.ReadLine();
+
+            // Determine the option specified by the user and act on it
+            switch (selection)
+            {
+                case "1":
+                    Player.SetSort(0);
+                    break;
+                case "2":
+                    Player.SetSort(1);
+                    break;
+                case "3":
+                    Player.SetSort(-1);
+                    break;
+                default:
+                    Console.WriteLine(" Unknown option - " +
+                    "Defaulting to sorting by score.");
+                    Player.SetSort(0);
+                    break;
+            }
+            SortBy();
+        }
+        private void SortBy()
+        {
+
+            if (Player.GetSort() == 0)
+            {
+                playerList.Sort();
+            }
+            else if (Player.GetSort() == 1)
+            {
+                IComparer<Player> ascending = new CompareByName(true);
+                playerList.Sort(ascending);
+            }
+            else
+            {
+                IComparer<Player> descending = new CompareByName(false);
+                playerList.Sort(descending);
+            }
+
         }
     }
 }
